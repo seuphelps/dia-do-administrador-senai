@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dia do Administrador - SENAI</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            senai: {
+              dark: '#002B5B',
+              primary: '#0056B3',
+              accent: '#00A8FF',
+              light: '#F0F4F8'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <style>
+    @media print {
+      body * { visibility: hidden; }
+      #area-impressao, #area-impressao * { visibility: visible; }
+      #area-impressao { position: absolute; left: 0; top: 0; width: 100%; }
+    }
+  </style>
+</head>
+<body class="bg-senai-light min-h-screen text-gray-800 font-sans flex flex-col">
+
+  <header class="bg-senai-dark text-white shadow-lg sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <div class="bg-white text-senai-dark font-black px-3 py-1 rounded text-xl tracking-wider">SENAI</div>
+        <div>
+          <h1 class="text-lg font-bold leading-tight">Dia do Administrador</h1>
+          <p class="text-xs text-blue-200">Aprendizagem em Assistente Administrativo</p>
+        </div>
+      </div>
+
+      <nav class="flex space-x-1 mt-3 sm:mt-0 overflow-x-auto w-full sm:w-auto py-1">
+        <button id="btn-inscricao" onclick="trocarAba('inscricao')" class="aba-btn px-3 py-1.5 text-xs font-semibold rounded bg-senai-primary text-white flex items-center space-x-1">
+          <i class="fas fa-edit"></i> <span>Inscrição</span>
+        </button>
+        <button id="btn-ingresso" onclick="trocarAba('ingresso')" class="aba-btn px-3 py-1.5 text-xs font-semibold rounded hover:bg-senai-primary/60 text-blue-100 flex items-center space-x-1">
+          <i class="fas fa-ticket-alt"></i> <span>Meu Ingresso</span>
+        </button>
+        <button id="btn-sorteio" onclick="trocarAba('sorteio')" class="aba-btn px-3 py-1.5 text-xs font-semibold rounded hover:bg-senai-primary/60 text-blue-100 flex items-center space-x-1">
+          <i class="fas fa-gift"></i> <span>Sorteio</span>
+        </button>
+        <button id="btn-scanner" onclick="trocarAba('scanner')" class="aba-btn px-3 py-1.5 text-xs font-semibold rounded hover:bg-senai-primary/60 text-blue-100 flex items-center space-x-1">
+          <i class="fas fa-qrcode"></i> <span>Check-in</span>
+        </button>
+        <button id="btn-pesquisa" onclick="trocarAba('pesquisa')" class="aba-btn px-3 py-1.5 text-xs font-semibold rounded hover:bg-senai-primary/60 text-blue-100 flex items-center space-x-1">
+          <i class="fas fa-comment-dots"></i> <span>Pesquisa</span>
+        </button>
+        <button id="btn-adm" onclick="trocarAba('adm')" class="aba-btn px-3 py-1.5 text-xs font-semibold rounded bg-amber-600 hover:bg-amber-700 text-white flex items-center space-x-1 ml-2">
+          <i class="fas fa-lock"></i> <span>ADM</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-6 flex-grow w-full">
+
+    <section id="aba-inscricao" class="aba-conteudo space-y-6">
+      <div class="bg-gradient-to-r from-senai-dark to-senai-primary text-white rounded-xl p-6 shadow-md flex flex-col md:flex-row justify-between items-center gap-6">
+        <div>
+          <span class="bg-amber-400 text-senai-dark text-xs uppercase font-bold px-2 py-1 rounded">Evento Gratuito</span>
+          <h2 class="text-3xl font-extrabold mt-2">Dia do Administrador SENAI</h2>
+          <p class="text-blue-100 text-sm mt-1">Inovação, Gestão e Futuro do Trabalho no Auditório do SENAI.</p>
+        </div>
+        
+        <div class="bg-white/10 backdrop-blur-md p-4 rounded-lg text-center border border-white/20 w-full md:w-64">
+          <span class="text-xs uppercase font-semibold text-blue-200">Lotação do Auditório</span>
+          <div class="text-3xl font-black my-1" id="contador-vagas">0% Ocupado</div>
+          <div class="w-full bg-blue-950 rounded-full h-2.5 overflow-hidden">
+            <div id="barra-progresso" class="bg-amber-400 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+          </div>
+          <p class="text-[11px] text-blue-200 mt-2" id="vagas-legenda">Inscrições Abertas!</p>
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+          <h3 class="text-xl font-bold text-senai-dark mb-4 border-b pb-2 flex items-center gap-2">
+            <i class="fas fa-user-plus text-senai-primary"></i> Formulário de Inscrição
+          </h3>
+
+          <form id="form-inscricao" onsubmit="realizarInscricao(event)" class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Nome Completo *</label>
+              <input type="text" id="nome" required placeholder="Digite seu nome completo" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-senai-primary outline-none">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">CPF ou Matrícula SENAI *</label>
+                <input type="text" id="cpf" required placeholder="Apenas números" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-senai-primary outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Telefone / WhatsApp *</label>
+                <input type="tel" id="telefone" required placeholder="(00) 00000-0000" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-senai-primary outline-none">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">E-mail *</label>
+                <input type="email" id="email" required placeholder="seuemail@exemplo.com" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-senai-primary outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Turma / Curso *</label>
+                <select id="turma" required class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-senai-primary outline-none bg-white">
+                  <option value="" disabled selected>Selecione seu curso...</option>
+                  <option value="Assistente Administrativo">Assistente Administrativo</option>
+                  <option value="Assistente de Logística">Assistente de Logística</option>
+                  <option value="Assistente de RH">Assistente de RH</option>
+                  <option value="Eletromecânica / Mecânica">Eletromecânica / Mecânica</option>
+                  <option value="TI / Informática">TI / Informática</option>
+                  <option value="Docente / Orientador">Docente / Orientador</option>
+                  <option value="Outro Curso / Visitante">Outro / Visitante</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="space-y-2 border-t border-b py-3 my-2 text-xs text-gray-600">
+              <label class="flex items-start gap-2 cursor-pointer">
+                <input type="checkbox" required class="mt-0.5 rounded text-senai-primary focus:ring-senai-primary">
+                <span>Concordo com o tratamento dos meus dados pessoais em conformidade com a <strong>LGPD</strong> para gestão deste evento pelo SENAI. *</span>
+              </label>
+              <label class="flex items-start gap-2 cursor-pointer">
+                <input type="checkbox" required class="mt-0.5 rounded text-senai-primary focus:ring-senai-primary">
+                <span>Autorizo o <strong>uso da minha imagem e voz</strong> em fotos e vídeos registrados durante o evento para divulgação institucional do SENAI. *</span>
+              </label>
+            </div>
+
+            <button type="submit" id="btn-submit-inscricao" class="w-full bg-senai-primary hover:bg-senai-dark text-white font-bold py-3 rounded-lg shadow transition duration-200">
+              Garantir Minha Vaga
+            </button>
+          </form>
+          <div id="msg-inscricao" class="mt-4"></div>
+        </div>
+
+        <div class="space-y-6">
+          <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+            <h3 class="text-xl font-bold text-senai-dark mb-4 border-b pb-2 flex items-center gap-2">
+              <i class="fas fa-clock text-senai-primary"></i> Cronograma do Evento
+            </h3>
+            <div class="space-y-4 border-l-2 border-senai-primary pl-4 ml-2">
+              <div class="relative">
+                <span class="absolute -left-[23px] top-1 bg-senai-primary text-white text-xs w-4 h-4 rounded-full flex items-center justify-center"></span>
+                <span class="text-xs font-bold text-senai-primary">08:00 - 08:30</span>
+                <h4 class="font-bold text-sm text-gray-800">Credenciamento & Recepção</h4>
+                <p class="text-xs text-gray-500">Validação do QR Code na entrada do auditório.</p>
+              </div>
+              <div class="relative">
+                <span class="absolute -left-[23px] top-1 bg-senai-primary text-white text-xs w-4 h-4 rounded-full flex items-center justify-center"></span>
+                <span class="text-xs font-bold text-senai-primary">08:30 - 09:30</span>
+                <h4 class="font-bold text-sm text-gray-800">Palestra: O Administrador do Futuro</h4>
+                <p class="text-xs text-gray-500">Tecnologia, Inteligência Artificial e Liderança de Equipes.</p>
+              </div>
+              <div class="relative">
+                <span class="absolute -left-[23px] top-1 bg-senai-primary text-white text-xs w-4 h-4 rounded-full flex items-center justify-center"></span>
+                <span class="text-xs font-bold text-senai-primary">09:30 - 10:15</span>
+                <h4 class="font-bold text-sm text-gray-800">Coffee Break & Networking</h4>
+                <p class="text-xs text-gray-500">Momento de troca de experiências entre os aprendizes.</p>
+              </div>
+              <div class="relative">
+                <span class="absolute -left-[23px] top-1 bg-senai-primary text-white text-xs w-4 h-4 rounded-full flex items-center justify-center"></span>
+                <span class="text-xs font-bold text-senai-primary">10:15 - 11:15</span>
+                <h4 class="font-bold text-sm text-gray-800">Mesa Redonda: Casos de Sucesso</h4>
+                <p class="text-xs text-gray-500">Ex-aprendizes compartilham trajetórias no mercado.</p>
+              </div>
+              <div class="relative">
+                <span class="absolute -left-[23px] top-1 bg-amber-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center"></span>
+                <span class="text-xs font-bold text-amber-600">11:15 - 11:45</span>
+                <h4 class="font-bold text-sm text-gray-800">Sorteio de Brindes & Encerramento</h4>
+                <p class="text-xs text-gray-500">Sorteio exclusivo para os participantes presentes.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100 space-y-3">
+            <h3 class="text-lg font-bold text-senai-dark border-b pb-2 flex items-center gap-2">
+              <i class="fas fa-question-circle text-senai-primary"></i> Perguntas Frequentes (FAQ)
+            </h3>
+            
+            <details class="group border-b pb-2 text-xs">
+              <summary class="font-bold text-gray-700 cursor-pointer flex justify-between items-center py-1">
+                <span>Qual o limite de tolerância para atrasos na entrada?</span>
+                <i class="fas fa-chevron-down text-gray-400 group-open:rotate-180 transition"></i>
+              </summary>
+              <p class="text-gray-500 mt-1 pl-2">A recepção funcionará a partir das 08:00. O credenciamento via QR Code será aceito até as 08:45 para validação no sistema.</p>
+            </details>
+
+            <details class="group border-b pb-2 text-xs">
+              <summary class="font-bold text-gray-700 cursor-pointer flex justify-between items-center py-1">
+                <span>Como responder à Pesquisa de Satisfação?</span>
+                <i class="fas fa-chevron-down text-gray-400 group-open:rotate-180 transition"></i>
+              </summary>
+              <p class="text-gray-500 mt-1 pl-2">Acesse a aba "Pesquisa", insira seu CPF e deixe sua opinião. Suas respostas ajudam nossa equipe a aprimorar as próximas edições do evento!</p>
+            </details>
+
+            <details class="group text-xs">
+              <summary class="font-bold text-gray-700 cursor-pointer flex justify-between items-center py-1">
+                <span>O que acontece se eu estiver na Fila de Espera?</span>
+                <i class="fas fa-chevron-down text-gray-400 group-open:rotate-180 transition"></i>
+              </summary>
+              <p class="text-gray-500 mt-1 pl-2">Se algum inscrito desistir e cancelar a vaga, a primeira pessoa da fila de espera é promovida automaticamente para "VAGA CONFIRMADA".</p>
+            </details>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="aba-ingresso" class="aba-conteudo hidden max-w-xl mx-auto">
+      <div class="bg-white p-6 rounded-xl shadow-md border text-center space-y-4">
+        <h3 class="text-xl font-bold text-senai-dark">Buscar Seu Ingresso</h3>
+        <p class="text-xs text-gray-500">Digite seu CPF ou Matrícula cadastrada para visualizar seu QR Code.</p>
+        
+        <div class="flex gap-2">
+          <input type="text" id="buscar-cpf" placeholder="Digite seu CPF / Matrícula" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-senai-primary outline-none">
+          <button onclick="buscarIngresso()" class="bg-senai-primary text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-senai-dark">
+            Buscar
+          </button>
+        </div>
+
+        <div id="resultado-ingresso" class="hidden pt-4"></div>
+      </div>
+    </section>
+
+    <section id="aba-sorteio" class="aba-conteudo hidden space-y-6">
+      <div class="bg-white p-6 rounded-xl shadow-md border text-center max-w-2xl mx-auto space-y-4">
+        <div class="inline-block bg-amber-100 text-amber-800 p-3 rounded-full text-2xl mb-1">
+          <i class="fas fa-trophy"></i>
+        </div>
+        <h3 class="text-2xl font-black text-senai-dark">Globo Virtual de Sorteios</h3>
+        <p class="text-xs text-gray-500">Apenas os inscritos que já realizaram o Check-in na entrada entram na lista do sorteio!</p>
+
+        <div class="bg-gray-50 p-4 rounded-lg border text-left space-y-2">
+          <label class="block text-xs font-bold text-gray-700 uppercase">Selecione o Brinde:</label>
+          <select id="select-brinde-sorteio" class="w-full p-2 border rounded-lg text-sm font-semibold text-gray-700"></select>
+        </div>
+
+        <div id="caixa-sorteando" class="py-8 bg-senai-dark text-white rounded-xl shadow-inner min-h-[160px] flex flex-col justify-center items-center">
+          <span id="nome-sorteado-animacao" class="text-2xl font-black tracking-wide text-amber-400">Pronto para começar?</span>
+          <span id="subtitulo-sorteado" class="text-xs text-blue-200 mt-1">Clique no botão abaixo para rodar a roleta.</span>
+        </div>
+
+        <button onclick="rodarSorteio()" class="w-full bg-amber-500 hover:bg-amber-600 text-senai-dark font-black text-lg py-3 rounded-lg shadow transition">
+          <i class="fas fa-random mr-2"></i> Sortear Agora
+        </button>
+      </div>
+    </section>
+
+    <section id="aba-scanner" class="aba-conteudo hidden max-w-lg mx-auto space-y-4">
+      <div class="bg-white p-6 rounded-xl shadow-md border text-center space-y-4">
+        <h3 class="text-xl font-bold text-senai-dark flex items-center justify-center gap-2">
+          <i class="fas fa-camera text-senai-primary"></i> Scanner de Ingresso (Portaria)
+        </h3>
+        <p class="text-xs text-gray-500">Aproxime o QR Code do ingresso do aluno na câmera para liberar a entrada.</p>
+
+        <div id="reader" class="overflow-hidden rounded-lg border-2 border-dashed border-gray-300"></div>
+
+        <div class="border-t pt-4">
+          <p class="text-xs text-gray-400 mb-2">Não funcionou a câmera? Digite o CPF manualmente:</p>
+          <div class="flex gap-2">
+            <input type="text" id="manual-cpf-checkin" placeholder="CPF do Aluno" class="w-full px-3 py-2 border rounded-lg text-sm outline-none">
+            <button onclick="validarCheckinManual()" class="bg-senai-primary text-white font-bold px-3 py-2 rounded-lg text-xs">Confirmar</button>
+          </div>
+        </div>
+
+        <div id="feedback-checkin" class="mt-4"></div>
+      </div>
+    </section>
+
+    <section id="aba-pesquisa" class="aba-conteudo hidden max-w-2xl mx-auto space-y-6">
+      <div class="bg-white p-6 rounded-xl shadow-md border space-y-4">
+        <h3 class="text-xl font-bold text-senai-dark text-center">Pesquisa de Satisfação</h3>
+        <p class="text-xs text-gray-500 text-center">Sua opinião é fundamental para aprimorarmos as próximas edições do evento! Digite seu CPF para participar.</p>
+
+        <div class="flex gap-2 max-w-md mx-auto">
+          <input type="text" id="cpf-pesquisa" placeholder="Digite seu CPF" class="w-full px-3 py-2 border rounded-lg text-sm outline-none">
+          <button onclick="verificarPesquisa()" class="bg-senai-primary text-white font-bold px-4 py-2 rounded-lg text-sm">Acessar</button>
+        </div>
+
+        <div id="area-pesquisa-formulario" class="hidden border-t pt-4 space-y-4">
+          <div class="bg-blue-50 p-4 rounded-lg space-y-3">
+            <h4 class="font-bold text-sm text-senai-dark">Sua Avaliação:</h4>
+            <div>
+              <label class="block text-xs font-semibold">1. O conteúdo das palestras atendeu suas expectativas?</label>
+              <select id="nota-conteudo" class="w-full text-xs p-2 border rounded mt-1 outline-none">
+                <option value="5">⭐⭐⭐⭐⭐ Excelente</option>
+                <option value="4">⭐⭐⭐⭐ Bom</option>
+                <option value="3">⭐⭐ Razoável</option>
+                <option value="2">⭐ Ruim</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold">2. Como avalia a organização e recepção do evento?</label>
+              <select id="nota-organizacao" class="w-full text-xs p-2 border rounded mt-1 outline-none">
+                <option value="5">⭐⭐⭐⭐⭐ Excelente</option>
+                <option value="4">⭐⭐⭐⭐ Boa</option>
+                <option value="3">⭐⭐ Regular</option>
+                <option value="2">⭐ Ruim</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold">3. O que podemos melhorar no próximo ano? (Opcional)</label>
+              <textarea id="sugestao-melhoria" rows="3" placeholder="Escreva aqui suas sugestões, críticas ou elogios..." class="w-full text-xs p-2 border rounded mt-1 outline-none focus:ring-1 focus:ring-senai-primary"></textarea>
+            </div>
+            <button onclick="salvarAvaliacaoSatisfacao()" class="w-full bg-green-600 text-white font-bold py-2.5 rounded text-xs shadow hover:bg-green-700 transition">
+              Enviar Pesquisa
+            </button>
+          </div>
+
+          <div id="msg-sucesso-pesquisa" class="hidden p-4 bg-green-100 text-green-800 text-xs font-bold rounded-lg text-center space-y-1">
+            <p class="text-sm">🎉 Pesquisa registrada com sucesso!</p>
+            <p class="font-normal text-green-700">Agradecemos imensamente por dedicar seu tempo. Suas respostas ajudarão a tornar o próximo evento ainda melhor!</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="aba-adm" class="aba-conteudo hidden space-y-6">
+      
+      <div id="adm-login-box" class="max-w-md mx-auto bg-white p-6 rounded-xl shadow-md border text-center space-y-4">
+        <div class="bg-amber-100 text-amber-800 w-12 h-12 rounded-full flex items-center justify-center mx-auto text-xl">
+          <i class="fas fa-user-lock"></i>
+        </div>
+        <h3 class="text-xl font-bold text-senai-dark">Acesso Restrito - ADM</h3>
+        <p class="text-xs text-gray-500">Digite a senha da comissão para acessar o painel.</p>
+        <input type="password" id="senha-adm" placeholder="Senha do ADM (Padrão: senai123)" class="w-full px-3 py-2 border rounded-lg text-sm outline-none">
+        <button onclick="autenticarADM()" class="w-full bg-senai-dark text-white font-bold py-2 rounded-lg text-sm">Entrar no Painel</button>
+      </div>
+
+      <div id="adm-dashboard" class="hidden space-y-6">
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+            <span class="text-xs text-gray-500 font-bold uppercase">Inscritos</span>
+            <div id="metric-inscritos" class="text-2xl font-black text-senai-primary">0</div>
+          </div>
+          <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+            <span class="text-xs text-gray-500 font-bold uppercase">Fila de Espera</span>
+            <div id="metric-fila" class="text-2xl font-black text-amber-600">0</div>
+          </div>
+          <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+            <span class="text-xs text-gray-500 font-bold uppercase">Presentes (Check-in)</span>
+            <div id="metric-presentes" class="text-2xl font-black text-green-600">0</div>
+          </div>
+          <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+            <span class="text-xs text-gray-500 font-bold uppercase">Limite Interno</span>
+            <div class="flex items-center justify-center gap-1 mt-1">
+              <input type="number" id="input-limite-vagas" value="200" class="w-16 text-center border rounded text-sm font-bold">
+              <button onclick="atualizarLimiteVagas()" class="bg-senai-primary text-white text-xs px-2 py-1 rounded">OK</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border shadow-sm flex flex-wrap gap-3 items-center justify-between">
+          <div>
+            <h4 class="font-bold text-senai-dark text-sm uppercase tracking-wider flex items-center gap-2">
+              <i class="fas fa-file-export text-senai-primary"></i> Relatórios do Evento
+            </h4>
+            <p class="text-xs text-gray-500">Exporte dados para planilhas em formato Excel/CSV.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="exportarRelatorioPresenca()" class="bg-green-700 hover:bg-green-800 text-white font-bold px-3 py-2 rounded text-xs flex items-center gap-1 shadow">
+              <i class="fas fa-file-excel"></i> Exportar Lista de Presença
+            </button>
+            <button onclick="exportarRelatorioPesquisas()" class="bg-senai-primary hover:bg-senai-dark text-white font-bold px-3 py-2 rounded text-xs flex items-center gap-1 shadow">
+              <i class="fas fa-chart-bar"></i> Exportar Pesquisa Satisfação
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4">
+          <h4 class="font-bold text-senai-dark text-sm uppercase tracking-wider flex items-center gap-2">
+            <i class="fas fa-gift text-amber-500"></i> Cadastrar e Gerenciar Brindes
+          </h4>
+          <form onsubmit="cadastrarBrinde(event)" class="flex flex-col sm:flex-row gap-2">
+            <input type="text" id="brinde-nome" required placeholder="Nome do Brinde" class="flex-grow p-2 border rounded text-xs">
+            <input type="text" id="brinde-doador" required placeholder="Doador / Parceiro" class="flex-grow p-2 border rounded text-xs">
+            <button type="submit" class="bg-amber-500 text-senai-dark font-bold px-4 py-2 rounded text-xs hover:bg-amber-600">Cadastrar</button>
+          </form>
+          <ul id="lista-brindes-adm" class="divide-y text-xs"></ul>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4">
+          <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <h4 class="font-bold text-senai-dark text-sm uppercase tracking-wider">Lista de Participantes Cadastrados</h4>
+            <input type="text" id="busca-tabela" onkeyup="filtrarTabelaADM()" placeholder="Filtrar por nome, curso ou CPF..." class="p-2 border rounded text-xs w-full sm:w-64">
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-senai-light text-senai-dark border-b">
+                  <th class="p-2">Nome</th>
+                  <th class="p-2">Turma / Curso</th>
+                  <th class="p-2">CPF / Matrícula</th>
+                  <th class="p-2">Status</th>
+                  <th class="p-2">Presença</th>
+                  <th class="p-2 text-right">Ação</th>
+                </tr>
+              </thead>
+              <tbody id="tabela-participantes" class="divide-y"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="bg-senai-dark text-white text-center py-4 text-xs border-t border-blue-900 mt-auto">
+    <p>© Evento Criado pela Turma de Aprendizagem em Assistente Administrativo - SENAI</p>
+  </footer>
+
+  <script>
+    let MAX_VAGAS = parseInt(localStorage.getItem('senai_max_vagas')) || 200;
+    
+    function getInscritos() {
+      return JSON.parse(localStorage.getItem('senai_inscritos')) || [];
+    }
+    function salvarInscritos(data) {
+      localStorage.setItem('senai_inscritos', JSON.stringify(data));
+      atualizarContadorVagas();
+    }
+    
+    function getBrindes() {
+      return JSON.parse(localStorage.getItem('senai_brindes')) || [
+        { id: '1', nome: 'Kit de Estudos SENAI', doador: 'Coordenação', sorteado: null }
+      ];
+    }
+    function salvarBrindes(data) {
+      localStorage.setItem('senai_brindes', JSON.stringify(data));
+    }
+
+    function getAvaliacoes() {
+      return JSON.parse(localStorage.getItem('senai_avaliacoes')) || [];
+    }
+    function salvarAvaliacao(dado) {
+      let aval = getAvaliacoes();
+      aval.push(dado);
+      localStorage.setItem('senai_avaliacoes', JSON.stringify(aval));
+    }
+
+    // --- CONTADOR DE VAGAS EM PORCENTAGEM (%) ---
+    function atualizarContadorVagas() {
+      const inscritos = getInscritos();
+      const confirmados = inscritos.filter(i => i.status === 'confirmado').length;
+      
+      const porc = Math.min(100, Math.round((confirmados / MAX_VAGAS) * 100));
+      document.getElementById('contador-vagas').innerText = `${porc}% Ocupado`;
+      
+      const barra = document.getElementById('barra-progresso');
+      barra.style.width = `${porc}%`;
+
+      const legenda = document.getElementById('vagas-legenda');
+      const btnInscricao = document.getElementById('btn-submit-inscricao');
+
+      if (confirmados >= MAX_VAGAS) {
+        legenda.innerText = '⚠️ Auditório lotado! Novas inscrições irão para a Fila de Espera.';
+        legenda.className = 'text-[11px] text-amber-300 font-bold mt-2';
+        btnInscricao.innerText = 'Entrar na Fila de Espera';
+        btnInscricao.className = 'w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 rounded-lg shadow transition duration-200';
+      } else {
+        legenda.innerText = 'Inscrições Abertas! Garanta seu lugar.';
+        legenda.className = 'text-[11px] text-blue-200 mt-2';
+        btnInscricao.innerText = 'Garantir Minha Vaga';
+        btnInscricao.className = 'w-full bg-senai-primary hover:bg-senai-dark text-white font-bold py-3 rounded-lg shadow transition duration-200';
+      }
+    }
+
+    // --- TROCA DE ABAS ---
+    let scannerHTML5 = null;
+
+    function trocarAba(abaId) {
+      document.querySelectorAll('.aba-conteudo').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.aba-btn').forEach(btn => {
+        btn.classList.remove('bg-senai-primary', 'text-white');
+        btn.classList.add('text-blue-100');
+      });
+
+      document.getElementById(`aba-${abaId}`).classList.remove('hidden');
+      const btnAtivo = document.getElementById(`btn-${abaId}`);
+      if (btnAtivo) {
+        btnAtivo.classList.add('bg-senai-primary', 'text-white');
+        btnAtivo.classList.remove('text-blue-100');
+      }
+
+      if (abaId === 'scanner') iniciarScanner(); else pararScanner();
+      if (abaId === 'sorteio') carregarBrindesSorteio();
+      if (abaId === 'adm') carregarPainelADM();
+      if (abaId === 'inscricao') atualizarContadorVagas();
+    }
+
+    // --- REALIZAR INSCRIÇÃO ---
+    function realizarInscricao(e) {
+      e.preventDefault();
+      const nome = document.getElementById('nome').value.trim();
+      const cpf = document.getElementById('cpf').value.trim().replace(/\D/g, '');
+      const telefone = document.getElementById('telefone').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const turma = document.getElementById('turma').value;
+
+      let inscritos = getInscritos();
+
+      if (inscritos.some(i => i.cpf === cpf)) {
+        document.getElementById('msg-inscricao').innerHTML = `
+          <div class="p-3 bg-red-100 text-red-700 rounded-lg text-xs font-bold border border-red-300">
+            ⚠️ Este CPF/Matrícula já possui uma inscrição cadastrada! Vá para a aba "Meu Ingresso".
+          </div>`;
+        return;
+      }
+
+      const confirmados = inscritos.filter(i => i.status === 'confirmado').length;
+      const status = confirmados < MAX_VAGAS ? 'confirmado' : 'fila';
+
+      const novoInscrito = {
+        id: 'SENAI-' + Date.now().toString().slice(-6),
+        nome,
+        cpf,
+        telefone,
+        email,
+        turma,
+        status,
+        presente: false
+      };
+
+      inscritos.push(novoInscrito);
+      salvarInscritos(inscritos);
+
+      document.getElementById('form-inscricao').reset();
+      document.getElementById('msg-inscricao').innerHTML = `
+        <div class="p-4 bg-green-100 text-green-800 rounded-lg text-xs font-bold border border-green-300 space-y-1">
+          <p class="text-sm">🎉 Inscrição Realizada com Sucesso!</p>
+          <p>Curso: <strong>${turma}</strong></p>
+          <p>Status: <span class="uppercase">${status === 'confirmado' ? '✅ Vaga Confirmada' : '⏳ Fila de Espera'}</span></p>
+          <p class="text-[11px] text-gray-600">Guarde seu CPF (${cpf}) para acessar seu ingresso na aba "Meu Ingresso".</p>
+        </div>`;
+    }
+
+    // --- BUSCAR INGRESSO & CANCELAMENTO ---
+    function buscarIngresso() {
+      const cpfBusca = document.getElementById('buscar-cpf').value.trim().replace(/\D/g, '');
+      const inscritos = getInscritos();
+      const aluno = inscritos.find(i => i.cpf === cpfBusca);
+
+      const divRes = document.getElementById('resultado-ingresso');
+      divRes.classList.remove('hidden');
+
+      if (!aluno) {
+        divRes.innerHTML = `<p class="text-xs text-red-600 font-bold">Nenhuma inscrição encontrada para o CPF digitado.</p>`;
+        return;
+      }
+
+      const isConfirmado = aluno.status === 'confirmado';
+
+      divRes.innerHTML = `
+        <div id="area-impressao" class="bg-gradient-to-b from-senai-dark to-senai-primary text-white p-6 rounded-2xl shadow-xl space-y-3 border-2 border-amber-400 relative overflow-hidden text-center">
+          <div class="text-amber-400 font-black text-xs uppercase tracking-widest">Ingresso Oficial - SENAI</div>
+          <h4 class="text-xl font-bold">${aluno.nome}</h4>
+          <p class="text-xs text-blue-200">Curso: <strong>${aluno.turma || 'Não Informado'}</strong></p>
+          
+          <div class="inline-block bg-white text-senai-dark font-extrabold px-3 py-1 rounded-full text-xs">
+            ${isConfirmado ? 'STATUS: VAGA CONFIRMADA' : 'STATUS: FILA DE ESPERA'}
+          </div>
+
+          <p class="text-[11px] text-blue-200">CPF: ${aluno.cpf}</p>
+          
+          <div class="bg-white p-3 rounded-xl inline-block my-2 shadow">
+            <div id="qrcode-canvas" class="flex justify-center"></div>
+          </div>
+          
+          <p class="text-[10px] text-blue-200">Apresente este QR Code na portaria do auditório.</p>
+        </div>
+        
+        <div class="flex gap-2 justify-center mt-4">
+          <button onclick="window.print()" class="bg-gray-800 text-white font-bold py-2 px-4 rounded-lg text-xs">
+            <i class="fas fa-print mr-1"></i> Imprimir Ingresso
+          </button>
+          <button onclick="cancelarMinhaInscricao('${aluno.cpf}')" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-xs">
+            <i class="fas fa-user-times mr-1"></i> Cancelar Inscrição
+          </button>
+        </div>`;
+
+      setTimeout(() => {
+        document.getElementById('qrcode-canvas').innerHTML = "";
+        new QRCode(document.getElementById('qrcode-canvas'), {
+          text: aluno.cpf,
+          width: 140,
+          height: 140
+        });
+      }, 100);
+    }
+
+    function cancelarMinhaInscricao(cpf) {
+      if (!confirm("Tem certeza que deseja cancelar sua inscrição? Esta ação não pode ser desfeita e liberará sua vaga para a fila de espera.")) {
+        return;
+      }
+
+      let inscritos = getInscritos();
+      const index = inscritos.findIndex(i => i.cpf === cpf);
+
+      if (index !== -1) {
+        const eraConfirmado = inscritos[index].status === 'confirmado';
+        inscritos.splice(index, 1);
+
+        if (eraConfirmado) {
+          const proximoFila = inscritos.find(i => i.status === 'fila');
+          if (proximoFila) {
+            proximoFila.status = 'confirmado';
+          }
+        }
+
+        salvarInscritos(inscritos);
+        document.getElementById('resultado-ingresso').innerHTML = `
+          <div class="p-4 bg-amber-100 text-amber-800 rounded-lg text-xs font-bold border border-amber-300">
+            Sua inscrição foi cancelada com sucesso. A vaga foi reatribuída.
+          </div>`;
+      }
+    }
+
+    // --- SCANNER DE QR CODE ---
+    function iniciarScanner() {
+      if (scannerHTML5) return;
+      scannerHTML5 = new Html5QrcodeScanner("reader", { fps: 10, qrbox: { width: 220, height: 220 } });
+      scannerHTML5.render((qrCodeMessage) => {
+        executarCheckin(qrCodeMessage);
+      }, (error) => {});
+    }
+
+    function pararScanner() {
+      if (scannerHTML5) {
+        scannerHTML5.clear().catch(e => {});
+        scannerHTML5 = null;
+      }
+    }
+
+    function validarCheckinManual() {
+      const val = document.getElementById('manual-cpf-checkin').value.trim();
+      if (val) executarCheckin(val);
+    }
+
+    function executarCheckin(codigo) {
+      const cpfLido = codigo.trim().replace(/\D/g, '');
+      let inscritos = getInscritos();
+      let aluno = inscritos.find(i => i.cpf === cpfLido || i.id === codigo);
+
+      const feedback = document.getElementById('feedback-checkin');
+
+      if (!aluno) {
+        feedback.innerHTML = `<div class="p-3 bg-red-100 text-red-700 text-xs font-bold rounded">❌ Ingresso Inválido ou Não Encontrado!</div>`;
+        return;
+      }
+
+      if (aluno.presente) {
+        feedback.innerHTML = `<div class="p-3 bg-amber-100 text-amber-800 text-xs font-bold rounded">⚠️ Check-in já havia sido realizado para <strong>${aluno.nome}</strong>!</div>`;
+        return;
+      }
+
+      aluno.presente = true;
+      salvarInscritos(inscritos);
+
+      feedback.innerHTML = `
+        <div class="p-4 bg-green-100 text-green-800 text-xs font-bold rounded space-y-1">
+          <p class="text-sm">✅ CHECK-IN REALIZADO COM SUCESSO!</p>
+          <p class="text-base text-senai-dark">${aluno.nome}</p>
+          <p class="text-xs">Turma: ${aluno.turma || '-'}</p>
+          <p class="text-[11px] text-gray-600">Status: ${aluno.status.toUpperCase()} | Presença Confirmada</p>
+        </div>`;
+    }
+
+    // --- SORTEIOS ---
+    function carregarBrindesSorteio() {
+      const brindes = getBrindes();
+      const select = document.getElementById('select-brinde-sorteio');
+      select.innerHTML = '';
+      
+      const disponiveis = brindes.filter(b => !b.sorteado);
+      if (disponiveis.length === 0) {
+        select.innerHTML = '<option>Todos os brindes já foram sorteados!</option>';
+        return;
+      }
+
+      disponiveis.forEach(b => {
+        select.innerHTML += `<option value="${b.id}">${b.nome} (Oferecido por: ${b.doador})</option>`;
+      });
+    }
+
+    function rodarSorteio() {
+      const brindes = getBrindes();
+      const idBrinde = document.getElementById('select-brinde-sorteio').value;
+      const brindeSel = brindes.find(b => b.id === idBrinde);
+
+      if (!brindeSel || brindeSel.sorteado) {
+        alert("Selecione um brinde válido!");
+        return;
+      }
+
+      const elegiveis = getInscritos().filter(i => i.presente && !i.ganhouSorteio);
+
+      if (elegiveis.length === 0) {
+        alert("Nenhum participante com Check-in realizado disponível para o sorteio!");
+        return;
+      }
+
+      const animEl = document.getElementById('nome-sorteado-animacao');
+      const subEl = document.getElementById('subtitulo-sorteado');
+      subEl.innerText = "Embaralhando nomes dos presentes...";
+      let giros = 0;
+
+      const intervalo = setInterval(() => {
+        const aleatorio = elegiveis[Math.floor(Math.random() * elegiveis.length)];
+        animEl.innerText = aleatorio.nome;
+        giros++;
+
+        if (giros > 25) {
+          clearInterval(intervalo);
+          const ganhador = elegiveis[Math.floor(Math.random() * elegiveis.length)];
+          animEl.innerText = `🎉 ${ganhador.nome} 🎉`;
+          subEl.innerText = `Parabéns! (${ganhador.turma || 'SENAI'}) - Ganhou: ${brindeSel.nome}`;
+
+          brindeSel.sorteado = ganhador.nome;
+          salvarBrindes(brindes);
+
+          let inscritos = getInscritos();
+          let g = inscritos.find(i => i.id === ganhador.id);
+          if (g) g.ganhouSorteio = brindeSel.nome;
+          salvarInscritos(inscritos);
+
+          carregarBrindesSorteio();
+        }
+      }, 100);
+    }
+
+    // --- PAINEL ADMINISTRATIVO (ADM) ---
+    function autenticarADM() {
+      const pass = document.getElementById('senha-adm').value;
+      if (pass === 'senai123') {
+        document.getElementById('adm-login-box').classList.add('hidden');
+        document.getElementById('adm-dashboard').classList.remove('hidden');
+        carregarPainelADM();
+      } else {
+        alert("Senha incorreta!");
+      }
+    }
+
+    function carregarPainelADM() {
+      const inscritos = getInscritos();
+      const brindes = getBrindes();
+
+      document.getElementById('metric-inscritos').innerText = inscritos.length;
+      document.getElementById('metric-fila').innerText = inscritos.filter(i => i.status === 'fila').length;
+      document.getElementById('metric-presentes').innerText = inscritos.filter(i => i.presente).length;
+      document.getElementById('input-limite-vagas').value = MAX_VAGAS;
+
+      const listaBrindes = document.getElementById('lista-brindes-adm');
+      listaBrindes.innerHTML = '';
+      brindes.forEach(b => {
+        listaBrindes.innerHTML += `
+          <li class="py-2 flex justify-between items-center">
+            <span><strong>${b.nome}</strong> (${b.doador})</span>
+            <div class="flex items-center gap-2">
+              <span class="${b.sorteado ? 'text-green-600 font-bold' : 'text-gray-400'}">
+                ${b.sorteado ? `Ganhador: ${b.sorteado}` : 'Aguardando Sorteio'}
+              </span>
+              <button onclick="excluirBrinde('${b.id}')" class="text-red-600 font-bold hover:underline text-[11px] ml-2">Excluir</button>
+            </div>
+          </li>`;
+      });
+
+      renderTabelaParticipantes(inscritos);
+    }
+
+    function renderTabelaParticipantes(lista) {
+      const tbody = document.getElementById('tabela-participantes');
+      tbody.innerHTML = '';
+
+      if (lista.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-3 text-center text-gray-400">Nenhum participante inscrito até o momento.</td></tr>`;
+        return;
+      }
+
+      lista.forEach((item) => {
+        tbody.innerHTML += `
+          <tr class="hover:bg-gray-50">
+            <td class="p-2 font-bold">${item.nome}</td>
+            <td class="p-2 text-gray-600 font-medium">${item.turma || '-'}</td>
+            <td class="p-2">${item.cpf}</td>
+            <td class="p-2">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${item.status === 'confirmado' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}">
+                ${item.status.toUpperCase()}
+              </span>
+            </td>
+            <td class="p-2">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${item.presente ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'}">
+                ${item.presente ? 'PRESENTE' : 'AUSENTE'}
+              </span>
+            </td>
+            <td class="p-2 text-right">
+              <button onclick="alternarPresenca('${item.cpf}')" class="text-blue-600 font-bold hover:underline text-[11px] mr-2">Check-in</button>
+              <button onclick="excluirInscrito('${item.cpf}')" class="text-red-600 font-bold hover:underline text-[11px]">Excluir</button>
+            </td>
+          </tr>`;
+      });
+    }
+
+    function filtrarTabelaADM() {
+      const q = document.getElementById('busca-tabela').value.toLowerCase();
+      const filtrados = getInscritos().filter(i => 
+        i.nome.toLowerCase().includes(q) || 
+        i.cpf.includes(q) || 
+        (i.turma && i.turma.toLowerCase().includes(q))
+      );
+      renderTabelaParticipantes(filtrados);
+    }
+
+    function alternarPresenca(cpf) {
+      let inscritos = getInscritos();
+      let al = inscritos.find(i => i.cpf === cpf);
+      if (al) {
+        al.presente = !al.presente;
+        salvarInscritos(inscritos);
+        carregarPainelADM();
+      }
+    }
+
+    function excluirInscrito(cpf) {
+      if (confirm("Deseja realmente remover este inscrito?")) {
+        let inscritos = getInscritos().filter(i => i.cpf !== cpf);
+        salvarInscritos(inscritos);
+        carregarPainelADM();
+      }
+    }
+
+    function cadastrarBrinde(e) {
+      e.preventDefault();
+      const nome = document.getElementById('brinde-nome').value.trim();
+      const doador = document.getElementById('brinde-doador').value.trim();
+      let brindes = getBrindes();
+      
+      brindes.push({ id: Date.now().toString(), nome, doador, sorteado: null });
+      salvarBrindes(brindes);
+      
+      document.getElementById('brinde-nome').value = '';
+      document.getElementById('brinde-doador').value = '';
+      carregarPainelADM();
+    }
+
+    function excluirBrinde(id) {
+      if (confirm("Deseja excluir este brinde da lista do sorteio?")) {
+        let brindes = getBrindes().filter(b => b.id !== id);
+        salvarBrindes(brindes);
+        carregarPainelADM();
+      }
+    }
+
+    function atualizarLimiteVagas() {
+      const novoVal = parseInt(document.getElementById('input-limite-vagas').value);
+      if (novoVal > 0) {
+        MAX_VAGAS = novoVal;
+        localStorage.setItem('senai_max_vagas', MAX_VAGAS);
+        
+        let inscritos = getInscritos();
+        inscritos.forEach((item, index) => {
+          item.status = index < MAX_VAGAS ? 'confirmado' : 'fila';
+        });
+        salvarInscritos(inscritos);
+        carregarPainelADM();
+        alert(`Limite atualizado para ${MAX_VAGAS} vagas!`);
+      }
+    }
+
+    // --- EXPORTAÇÃO DE RELATÓRIOS (CSV) ---
+    function exportarParaCSV(dados, nomeArquivo) {
+      if (!dados || dados.length === 0) {
+        alert("Não há dados cadastrados para exportar.");
+        return;
+      }
+
+      const colunas = Object.keys(dados[0]);
+      const linhasCSV = [
+        colunas.join(','),
+        ...dados.map(linha => colunas.map(col => `"${(linha[col] || '').toString().replace(/"/g, '""')}"`).join(','))
+      ];
+
+      const conteudoCSV = "\uFEFF" + linhasCSV.join("\n");
+      const blob = new Blob([conteudoCSV], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", nomeArquivo);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function exportarRelatorioPresenca() {
+      const inscritos = getInscritos();
+      const dadosTratados = inscritos.map(i => ({
+        "Nome Completo": i.nome,
+        "Turma / Curso": i.turma || "Não Informado",
+        "CPF / Matrícula": i.cpf,
+        "E-mail": i.email || "-",
+        "Telefone": i.telefone || "-",
+        "Status Vaga": i.status.toUpperCase(),
+        "Presença Confirmada": i.presente ? "SIM" : "NÃO",
+        "Brinde Sorteado": i.ganhouSorteio || "-"
+      }));
+
+      exportarParaCSV(dadosTratados, `relatorio_presenca_senai_${Date.now()}.csv`);
+    }
+
+    function exportarRelatorioPesquisas() {
+      const avaliacoes = getAvaliacoes();
+      const dadosTratados = avaliacoes.map(a => ({
+        "Nome": a.nome,
+        "CPF": a.cpf,
+        "Nota Conteúdo": `${a.notaConteudo} estrelas`,
+        "Nota Organização": `${a.notaOrganizacao} estrelas`,
+        "Sugestões / Observações": a.sugestao || "-",
+        "Data Resposta": a.data
+      }));
+
+      exportarParaCSV(dadosTratados, `relatorio_pesquisa_satisfacao_${Date.now()}.csv`);
+    }
+
+    // --- PESQUISA DE SATISFAÇÃO ---
+    let usuarioAtualPesquisa = null;
+
+    function verificarPesquisa() {
+      const cpf = document.getElementById('cpf-pesquisa').value.trim().replace(/\D/g, '');
+      const aluno = getInscritos().find(i => i.cpf === cpf);
+      const area = document.getElementById('area-pesquisa-formulario');
+
+      if (!aluno) {
+        alert("CPF não encontrado no sistema! Verifique se realizou sua inscrição.");
+        return;
+      }
+
+      usuarioAtualPesquisa = aluno;
+      area.classList.remove('hidden');
+      document.getElementById('msg-sucesso-pesquisa').classList.add('hidden');
+    }
+
+    function salvarAvaliacaoSatisfacao() {
+      if (!usuarioAtualPesquisa) return;
+
+      salvarAvaliacao({
+        nome: usuarioAtualPesquisa.nome,
+        cpf: usuarioAtualPesquisa.cpf,
+        notaConteudo: document.getElementById('nota-conteudo').value,
+        notaOrganizacao: document.getElementById('nota-organizacao').value,
+        sugestao: document.getElementById('sugestao-melhoria').value.trim(),
+        data: new Date().toLocaleString('pt-BR')
+      });
+
+      document.getElementById('msg-sucesso-pesquisa').classList.remove('hidden');
+      document.getElementById('sugestao-melhoria').value = '';
+    }
+
+    // Inicialização
+    atualizarContadorVagas();
+  </script>
+</body>
+</html>
